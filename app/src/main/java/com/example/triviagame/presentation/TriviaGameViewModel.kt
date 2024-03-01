@@ -1,10 +1,11 @@
 package com.example.triviagame.presentation
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.triviagame.network.TriviaNetworkItem
-
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -19,88 +20,85 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class TriviaGameViewModel(): ViewModel() {
+class TriviaGameViewModel(application: Application): AndroidViewModel(application) {
     private val _uiState = MutableStateFlow((TriviaUiState()))
     val uiState: StateFlow<TriviaUiState> = _uiState.asStateFlow()
+    private val context = application
 
     init {
-        Log.d("viewmodel - init", uiState.toString())
         loadData()
     }
     private fun loadData() {
-        Log.d("viewmodel-loaddata", "made it to loaddata")
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("viewmodel-loaddata", "calling api")
             val triviaQuestions = retrieveListOfTriviaQuestionsFromNetwork()
-            Log.d("viewmodel-loadData", "Retrieved trivia ${triviaQuestions}")
-            triviaQuestions.forEach {
-                Log.d("ViewModel - load", "$it")
-            }
+            Log.d("TriviaGameViewModel-loadData", "Retrieved trivia $triviaQuestions")
+
             _uiState.update { currentState ->
-                Log.d("viewmodel-loaddata", "seeting state")
                 currentState.copy(
-                    questions = triviaQuestions
+                    questions = triviaQuestions,
+                    highScore = getHighScore()
                 )
             }
-
         }
     }
 
     fun reloadData() {
-        Log.d("Viewmodel-reload", "Reloading the data")
         resetScore()
         resetAttempts()
         loadData()
-        _uiState.update { currentState->
+        _uiState.update { currentState ->
             currentState.copy(
                 currentQuestion = 0
             )
         }
-        Log.d("Viewmodel-reload", "Done reloading")
+    }
+
+    fun resetData() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                attempts = 0,
+                currentQuestion = -1,
+                currentScore = 0,
+                questions = listOf(),
+                selectedAnswer = "",
+                highScore = 0
+            )
+
+        }
     }
     private suspend fun retrieveListOfTriviaQuestionsFromNetwork(): List<TriviaNetworkItem> {
-        Log.d("viewmodel-retrieve", "made it to retrieve")
         val client = HttpClient(Android) {
             install(ContentNegotiation) {
                 json(contentType = ContentType("application", "json"))
             }
         }
-        Log.d("viewmodel-retrieve", "got a client ${client.toString()}")
-        val httpResponse = client.get("https://the-trivia-api.com/v2/questions")
-        Log.d("viewmodel-retrieve", "httpResponse as trivia network ${httpResponse.toString()}")
-        val response: List<TriviaNetworkItem> =
-            client.get("https://the-trivia-api.com/v2/questions").body()
-        Log.d("retrieve", response.toString())
-        return response
+
+        return client.get(TRIVIA_QUESTIONS_URL).body<List<TriviaNetworkItem>>()
     }
 
     fun getListOfAnswers(correctAnswer: String, incorrectAnswers: List<String>): List<String> {
-        var allAnswers = mutableListOf<String>()
+        val allAnswers = mutableListOf<String>()
         allAnswers.add(correctAnswer)
         allAnswers.addAll(incorrectAnswers)
         return allAnswers.shuffled()
     }
 
     fun isAnswerCorrect(submittedAnswer: String, correctAnswer: String): Boolean {
-        val isCorrect = submittedAnswer.equals(correctAnswer, ignoreCase = true)
-        Log.d("Viewmodel-iscorrect", "$isCorrect")
-       return isCorrect
+        return submittedAnswer.equals(correctAnswer, ignoreCase = true)
     }
 
     fun getNextQuestion() {
         val currentQuestion = uiState.value.currentQuestion
-        if (currentQuestion == uiState.value.questions.size -1) {
-            _uiState.update {currentState->
+        if (currentQuestion == uiState.value.questions.size - 1) {
+            _uiState.update { currentState ->
                 currentState.copy(
                     currentQuestion = -1,
                     attempts = 0
-
                 )
-
             }
-        }
-        else {
-            _uiState.update { currentState->
+            maybeUpdateHighScore()
+        } else {
+            _uiState.update { currentState ->
                 currentState.copy(
                     currentQuestion = currentQuestion + 1,
                     attempts = 0
@@ -112,10 +110,9 @@ class TriviaGameViewModel(): ViewModel() {
     fun incrementScore(question: TriviaNetworkItem) {
         val currentScore = uiState.value.currentScore
         val increment = questionValue(question)
-
         _uiState.update { currentState ->
             currentState.copy(
-                currentScore + increment
+                currentScore =currentScore + increment
             )
         }
     }
@@ -151,5 +148,44 @@ class TriviaGameViewModel(): ViewModel() {
                 currentScore = 0
             )
         }
+    }
+
+    private fun maybeUpdateHighScore() {
+        val sharedPreferences = context.getSharedPreferences(
+            SHARED_PREF_LOC,
+            Context.MODE_PRIVATE)
+        if (isNewHighScore()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                sharedPreferences.edit()
+                    .putInt("highScore", uiState.value.highScore)
+                    .apply()
+            }
+
+            _uiState.update {currentState ->
+                currentState.copy(
+                    highScore = uiState.value.currentScore
+                )
+
+            }
+        }
+
+    }
+
+    private fun getHighScore(): Int {
+        val sharedPreferences = context.getSharedPreferences(
+            SHARED_PREF_LOC,
+            Context.MODE_PRIVATE)
+        return  sharedPreferences.getInt("highScore", 0)
+    }
+
+    private fun isNewHighScore(): Boolean {
+        return uiState.value.currentScore > uiState.value.highScore
+    }
+
+    companion object {
+        const val SHARED_PREF_LOC =  "TriviaGameScores.prefs"
+        const val TRIVIA_QUESTIONS_URL = "https://the-trivia-api.com/v2/questions"
+
+
     }
 }
