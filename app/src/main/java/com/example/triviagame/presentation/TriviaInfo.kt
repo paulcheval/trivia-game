@@ -37,16 +37,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.triviagame.R
-import com.example.triviagame.network.Question
+import com.example.triviagame.navigation.Home
 import com.example.triviagame.network.TriviaNetworkItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TriviaInfo() {
+fun TriviaInfo(navController: NavHostController) {
     val viewModel: TriviaGameViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     Log.d("TriviaInfo", uiState.toString())
@@ -58,7 +58,10 @@ fun TriviaInfo() {
     if (showEndOfGameDialog) {
         Alert(title = stringResource(id = R.string.game_over),
             textLine1 = stringResource(id = R.string.play_again),
-            onDismiss = {  showEndOfGameDialog = false },
+            onDismiss = {
+                viewModel.resetData()
+                showEndOfGameDialog = false
+                navController.popBackStack(Home.route, inclusive = false)},
             onConfirm = {
                 viewModel.reloadData()
                 showEndOfGameDialog = false
@@ -74,26 +77,16 @@ fun TriviaInfo() {
                 Text(text = "No trivia today")
             } else if (uiState.currentQuestion == -1) {
                 showEndOfGameDialog = true
-                Log.d("TriviaInfo-top", "Processing -1 question")
-                Text(text = "Game Over")
-                Toast.makeText(LocalContext.current, "Game Over", Toast.LENGTH_LONG).show()
             } else {
                 val currentQuestion = uiState.questions[uiState.currentQuestion]
                 TriviaScreen(
                     viewModel = viewModel,
                     currentQuestion = currentQuestion,
                     modifier = Modifier.padding(padding))
-                /*Column(modifier = Modifier.fillMaxSize()) {
-                    QuestionCard(
-                        viewModel= viewModel,
-                        question = currentQuestion,
-                        allAnswers = viewModel.getListOfAnswers(currentQuestion.correctAnswer, currentQuestion.incorrectAnswers),
-                        modifier = Modifier.padding(padding)
-                    )
-                }*/
+
             }
         },
-        bottomBar = { BottomAppBar { Text("You Are Here") } }
+        bottomBar = { BottomAppBarLogo() }
     )
 
 }
@@ -125,81 +118,23 @@ fun QuestionCard(
 
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+
     var selectedOption by remember {
         mutableStateOf("")
     }
-
 
         Column (modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp),
             verticalArrangement = Arrangement.Center) {
-            Row (verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.category_label),
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Left,
-                        fontStyle = FontStyle.Normal,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                    Text(
-                        text = stringResource(id = Categories.valueOf(question.category).presentationName),
-                        textAlign = TextAlign.Left,
-                        fontStyle = FontStyle.Normal,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                }
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.difficulty_label),
-                        fontWeight = FontWeight.Bold,
-                        fontStyle = FontStyle.Normal,
-                        textAlign = TextAlign.Left,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                    Text(
-                        text = stringResource(id = Difficulty.valueOf(question.difficulty).presentationName),
-                        textAlign = TextAlign.Left,
-                        fontStyle = FontStyle.Normal,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                }
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.question_value_label),
-                        fontWeight = FontWeight.Bold,
-                        fontStyle = FontStyle.Normal,
-                        textAlign = TextAlign.Left,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                    Text(
-                        text = viewModel.questionValue(question).toString(),
-                        textAlign = TextAlign.Left,
-                        fontStyle = FontStyle.Normal,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                    )
-                }
-
-
-
-            }
-
-
+            QuestionInfo(viewModel = viewModel, question =  question)
             Divider(thickness = 3.dp)
             Spacer(modifier = Modifier.height(10.dp))
             Text(text = question.question.text)
             Divider(thickness = 1.dp)
-            allAnswers.forEach {answer ->
-                Row (verticalAlignment = Alignment.CenterVertically) {
+
+            allAnswers.forEach { answer ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = (answer == selectedOption),
                         onClick = { selectedOption = answer }
                     )
@@ -239,55 +174,125 @@ fun QuestionCard(
                 Text(text = "Validate answer")
             }
 
-
-
-
             Column(verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()) {
 
-                Image(
-                    painter = painterResource(id = Categories.valueOf(question.category).image),
-                    contentDescription = null,
-                    alignment = Alignment.Center,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(330.dp, 200.dp)
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(20.dp)))
+                CategoryImage(question = question)
 
                 Button(onClick = { viewModel.getNextQuestion() }) {
                     Text(text = "Next")
                 }
                 Divider()
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    Text(
-                        text = stringResource(id = R.string.current_score_label),
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Right,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
-
-                    Text(text = uiState.currentScore.toString(),
-                        textAlign = TextAlign.Left,
-                        modifier = Modifier.padding(start = 2.dp))
-                }
+                ScoreFooter(uiState = uiState)
             }
-
-
         }
 
-    }
-
+}
 
 
 @Composable
-fun Answers(incorrectAnswer: String) {
-    Text(text = incorrectAnswer)
+fun QuestionInfo(viewModel: TriviaGameViewModel,
+                 question: TriviaNetworkItem) {
+    Row (verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround,
+        modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(
+                text = stringResource(id = R.string.category_label),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Left,
+                fontStyle = FontStyle.Normal,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+            Text(
+                text = stringResource(id = Categories.valueOf(question.category).presentationName),
+                textAlign = TextAlign.Left,
+                fontStyle = FontStyle.Normal,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+        }
+        Column {
+            Text(
+                text = stringResource(id = R.string.difficulty_label),
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Normal,
+                textAlign = TextAlign.Left,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+            Text(
+                text = stringResource(id = Difficulty.valueOf(question.difficulty).presentationName),
+                textAlign = TextAlign.Left,
+                fontStyle = FontStyle.Normal,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+        }
+        Column {
+            Text(
+                text = stringResource(id = R.string.question_value_label),
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Normal,
+                textAlign = TextAlign.Left,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+            Text(
+                text = viewModel.questionValue(question).toString(),
+                textAlign = TextAlign.Left,
+                fontStyle = FontStyle.Normal,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+            )
+        }
+    }
+
+}
+@Composable
+fun CategoryImage(question: TriviaNetworkItem) {
+    Image(
+        painter = painterResource(id = Categories.valueOf(question.category).image),
+        contentDescription = null,
+        alignment = Alignment.Center,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .size(330.dp, 200.dp)
+            .padding(10.dp)
+            .clip(RoundedCornerShape(20.dp)))
+}
+@Composable
+fun ScoreFooter(uiState: TriviaUiState) {
+    Row(verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center) {
+        Text(
+            text = stringResource(id = R.string.current_score_label),
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Right,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+
+        Text(text = uiState.currentScore.toString(),
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(start = 2.dp))
+        Text(
+            text = stringResource(id = R.string.high_score_label),
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Right,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+
+        Text(text = uiState.highScore.toString(),
+            textAlign = TextAlign.Left,
+            modifier = Modifier.padding(start = 2.dp))
+    }
 }
 
-@Preview
+
+
+/*@Preview
 @Composable
 fun TriviaScreenPreview(){
     val currentQuestion = TriviaNetworkItem(
@@ -302,7 +307,8 @@ fun TriviaScreenPreview(){
         tags = emptyList(),
         type = "type"
     )
-    TriviaScreen(viewModel = TriviaGameViewModel(),
+    val context = LocalContext.current
+    TriviaScreen(viewModel = TriviaGameViewModel(context),
         currentQuestion
     )
-}
+}*/

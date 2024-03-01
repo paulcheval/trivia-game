@@ -16,6 +16,7 @@
     <string name="category_label">Category: </string>
     <string name="difficulty_label">Difficulty: </string>
     <string name="current_score_label">Score: </string>
+    <string name="high_score_label">High Score: </string>
     <string name="question_value_label">Value: </string>
     <string name="stop_play_label">End Game</string>
     <string name="replay_game_label">Play Again?</string>
@@ -23,4 +24,11 @@
     <string name="play_again">Play Again?</string>
     <string name="correct_answer_message">Correct!!!</string>
     <string name="incorrect_answer_message">Incorrect, try again</string>
+    <string name="welcome_message">Welcome to the greatest Trivia Game available!!!</string>
+    <string name="bottom_Message">Another fine product brought to you by Free-Loader Enterprises</string>
+    <string name="instruction_1">1. Click on Trivia Game to start playing</string>
+    <string name="instruction_2">2. Each question is shown along with 4 possible answers, only one is correct.</string>
+    <string name="instruction_3">3. Each question is scored based on the difficulty.</string>
+    <string name="instruction_4">4. Each wrong answer reduces the possible score for the question.</string>
+    <string name="rules_of_the_game">Rules of the Game</string>
 </resources>
