@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 import androidx.navigation.compose.rememberNavController
+import com.example.triviagame.presentation.HighScoresScreen
 import com.example.triviagame.presentation.HomeScreen
 import com.example.triviagame.presentation.InstructionScreen
 import com.example.triviagame.presentation.TriviaInfo
@@ -26,6 +27,9 @@ fun Navigation(
         }
         composable(Instructions.route) {
             InstructionScreen(navController)
+        }
+        composable(HighScores.route) {
+            HighScoresScreen(navController)
         }
     }
 }

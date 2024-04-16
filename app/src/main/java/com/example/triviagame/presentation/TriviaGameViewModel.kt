@@ -2,17 +2,12 @@ package com.example.triviagame.presentation
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.triviagame.network.HighScoreService
+import com.example.triviagame.network.HighScores
+import com.example.triviagame.network.NetworkQandAService
 import com.example.triviagame.network.TriviaNetworkItem
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class TriviaGameViewModel(application: Application): AndroidViewModel(application) {
+
+class TriviaGameViewModel (
+     application: Application,
+
+): AndroidViewModel(application) {
     private val _uiState = MutableStateFlow((TriviaUiState()))
     val uiState: StateFlow<TriviaUiState> = _uiState.asStateFlow()
     private val context = application
@@ -30,15 +29,21 @@ class TriviaGameViewModel(application: Application): AndroidViewModel(applicatio
     }
     private fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
-            val triviaQuestions = retrieveListOfTriviaQuestionsFromNetwork()
-            Log.d("TriviaGameViewModel-loadData", "Retrieved trivia $triviaQuestions")
+            retriveAndLoadQuestionsAndAnswers()
+        }
+    }
 
-            _uiState.update { currentState ->
-                currentState.copy(
-                    questions = triviaQuestions,
-                    highScore = getHighScore()
-                )
-            }
+
+
+    public suspend fun retriveAndLoadQuestionsAndAnswers() {
+        val triviaQuestions = retrieveListOfTriviaQuestionsFromNetwork()
+        //Log.d("TriviaGameViewModel-loadData", "Retrieved trivia $triviaQuestions")
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                questions = triviaQuestions,
+                highScore = getHighScore()
+            )
         }
     }
 
@@ -53,6 +58,12 @@ class TriviaGameViewModel(application: Application): AndroidViewModel(applicatio
         }
     }
 
+    suspend fun retrieveListOfTriviaQuestionsFromNetwork() : List<TriviaNetworkItem>{
+        return NetworkQandAService().retrieveListOfTriviaQuestionsFromNetwork()
+    }
+
+
+
     fun resetData() {
         _uiState.update { currentState ->
             currentState.copy(
@@ -66,15 +77,7 @@ class TriviaGameViewModel(application: Application): AndroidViewModel(applicatio
 
         }
     }
-    private suspend fun retrieveListOfTriviaQuestionsFromNetwork(): List<TriviaNetworkItem> {
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("application", "json"))
-            }
-        }
 
-        return client.get(TRIVIA_QUESTIONS_URL).body<List<TriviaNetworkItem>>()
-    }
 
     fun getListOfAnswers(correctAnswer: String, incorrectAnswers: List<String>): List<String> {
         val allAnswers = mutableListOf<String>()
@@ -182,9 +185,25 @@ class TriviaGameViewModel(application: Application): AndroidViewModel(applicatio
         return uiState.value.currentScore > uiState.value.highScore
     }
 
+    public fun retieveHighScores() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val scores = retrieveHighScoresFromNetwork()
+            val sortedScores = scores.highScores.sortedBy { it.ranking }
+            _uiState.update { currentState ->
+                currentState.copy(
+                    highScores = sortedScores
+                )
+            }
+        }
+    }
+    suspend fun retrieveHighScoresFromNetwork() : HighScores{
+        return HighScoreService().retrieveListOfHighScoresFromNetwork()
+    }
+
     companion object {
         const val SHARED_PREF_LOC =  "TriviaGameScores.prefs"
         const val TRIVIA_QUESTIONS_URL = "https://the-trivia-api.com/v2/questions"
+        const val HIGH_SCORE_URL = "http://10.0.0.187:8080/trivia-high-score/scores"
 
 
     }

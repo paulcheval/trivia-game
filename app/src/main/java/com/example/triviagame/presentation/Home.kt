@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.triviagame.R
+import com.example.triviagame.navigation.HighScores
 import com.example.triviagame.navigation.Instructions
 import com.example.triviagame.navigation.TriviaInfo
 
@@ -47,6 +49,7 @@ fun HomeScreen(navController: NavHostController) {
                     .fillMaxSize()
                     .padding(paddingValues = padding)) {
                 Text(text = stringResource(id = R.string.welcome_message),
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp)
 
@@ -61,7 +64,7 @@ fun HomeScreen(navController: NavHostController) {
                         .padding(5.dp)
 
                 ) {
-                    Text(text = "Play the Game")
+                    Text(stringResource(id = R.string.play_game))
                 }
                 Button(
                     onClick = {
@@ -74,7 +77,21 @@ fun HomeScreen(navController: NavHostController) {
                         .padding(5.dp)
 
                 ) {
-                    Text(text = "How do I play?")
+                    Text(stringResource(id = R.string.how_to_play))
+                }
+
+                Button(
+                    onClick = {
+                        navController.navigate(HighScores.route)
+                    },
+                    shape = RoundedCornerShape(10.dp),
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+
+                ) {
+                    Text(stringResource(id = R.string.see_high_scores))
                 }
             }
         },
