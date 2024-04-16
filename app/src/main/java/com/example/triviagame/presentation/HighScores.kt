@@ -22,12 +22,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.triviagame.R
 import com.example.triviagame.navigation.Home
@@ -36,9 +39,12 @@ import com.example.triviagame.navigation.TriviaInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InstructionScreen(navController: NavHostController) {
+fun HighScoresScreen(navController: NavHostController) {
+    val viewModel: TriviaGameViewModel = viewModel()
+    viewModel.retieveHighScores()
+    val uiState by viewModel.uiState.collectAsState()
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Awesome Trivia Experience") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(id = R.string.high_score_screen)) }) },
 
         content = { padding ->
            Column(verticalArrangement = Arrangement.SpaceAround,
@@ -50,56 +56,44 @@ fun InstructionScreen(navController: NavHostController) {
                    modifier = Modifier.fillMaxWidth()
 
                ) {
-                   Text(text = stringResource(id = R.string.rules_of_the_game),
+                   Text(text = stringResource(id = R.string.my_high_score),
                        textAlign = TextAlign.Center,
                        fontWeight = FontWeight.ExtraBold
                    )
                }
                Spacer(modifier = Modifier.height(20.dp))
-               InstructionLine(instructionId = R.string.instruction_1)
-               InstructionLine(instructionId = R.string.instruction_2)
-               InstructionLine(instructionId = R.string.instruction_3)
-               InstructionLine(instructionId = R.string.instruction_4)
-               Spacer(modifier = Modifier.height(20.dp))
-
                Row() {
-                   Column(verticalArrangement = Arrangement.Bottom,
+                   Column(verticalArrangement = Arrangement.Center,
                        horizontalAlignment = Alignment.CenterHorizontally,
                        modifier = Modifier
                            .fillMaxWidth()
                    ) {
-                       Button(
-                           onClick = {
-                               navController.navigate(Home.route)
-                           },
-                           shape = RoundedCornerShape(10.dp),
-
-                           modifier = Modifier
-                               .fillMaxWidth()
-                               .padding(5.dp)
-
-                       ) {
-                           Text(stringResource(id = R.string.go_back))
-                       }
-                       Button(
-                           onClick = {
-                               navController.navigate(TriviaInfo.route)
-                           },
-                           shape = RoundedCornerShape(10.dp),
-
-                           modifier = Modifier
-                               .fillMaxWidth()
-                               .padding(5.dp)
-
-                       ) {
-                           Text(stringResource(id = R.string.play_now))
-                       }
+                       MyHighScore(uiState)
                    }
                }
+               Row(verticalAlignment = Alignment.CenterVertically,
+                   horizontalArrangement = Arrangement.Center,
+                   modifier = Modifier.fillMaxWidth()
+
+               ) {
+                   Text(text = stringResource(id = R.string.all_time_high_score),
+                       textAlign = TextAlign.Center,
+                       fontWeight = FontWeight.ExtraBold
+                   )
+               }
+               Spacer(modifier = Modifier.height(20.dp))
+
+               Row() {
+                   Column(verticalArrangement = Arrangement.Center,
+                       horizontalAlignment = Alignment.CenterHorizontally,
+                       modifier = Modifier
+                           .fillMaxWidth()
+                   ) {
+                       AllTimeHighScores(uiState)}
+               }
+
                
            }
-
-
 
         },
         bottomBar = {
@@ -110,18 +104,24 @@ fun InstructionScreen(navController: NavHostController) {
 }
 
 @Composable
-fun InstructionLine(instructionId: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 10.dp, end = 10.dp)) {
-        Text(text = stringResource(id = instructionId))
+fun AllTimeHighScores(
+    uiState: TriviaUiState
+) {
+    val highScores = uiState.highScores
+    LazyColumn {
+        items(highScores) { highScore ->
+            Text(
+                text = "${highScore.ranking} - ${highScore.name} - ${highScore.highScore} points on ${highScore.date}",
+                fontSize = 20.sp
+            )
+        }
     }
 }
 
-@Preview
 @Composable
-fun InstructionsScreenPreview() {
-    InstructionScreen(navController = rememberNavController())
+fun MyHighScore(
+    uiState: TriviaUiState
+) {
+    Text(text = "My personal High Score: ${uiState.highScore} points",
+        fontSize = 20.sp)
 }

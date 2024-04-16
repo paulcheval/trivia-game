@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("org.jetbrains.kotlin.plugin.serialization")
+
 }
 
 android {
@@ -69,6 +70,8 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.1.3")
 
     implementation("androidx.room:room-runtime:2.4.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     kapt("androidx.room:room-compiler:2.4.3")
 
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
@@ -77,7 +80,12 @@ dependencies {
 
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
 
+
+
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:4.1.0")
+    testImplementation("org.mockito:mockito-inline:4.1.0") // for mocking final classes
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))

@@ -31,4 +31,12 @@
     <string name="instruction_3">3. Each question is scored based on the difficulty.</string>
     <string name="instruction_4">4. Each wrong answer reduces the possible score for the question.</string>
     <string name="rules_of_the_game">Rules of the Game</string>
+    <string name="play_now">I wanna play NOW!!!!</string>
+    <string name="go_back">Let\'s go back?</string>
+    <string name="play_game">Play the Game</string>
+    <string name="how_to_play">How do I play?</string>
+    <string name="high_score_screen">Awesome Trivia Experience - High Scores</string>
+    <string name="all_time_high_score" >All-Time High Scores</string>
+    <string name="my_high_score">My High Score</string>
+    <string name="see_high_scores">View High Scores</string>
 </resources>

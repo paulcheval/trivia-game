@@ -12,7 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.compose.TriviaGameTheme
 import com.example.triviagame.navigation.Navigation
-import com.example.triviagame.presentation.TriviaInfo
+
 
 class MainActivity : ComponentActivity() {
 
@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
 fun TriviaGame() {
     val navController= rememberNavController()
     Navigation(navController)
+
 }
 
 @Preview(showBackground = true)

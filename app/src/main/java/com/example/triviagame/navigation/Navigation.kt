@@ -15,3 +15,6 @@ object TriviaInfo: Destinations {
 object Instructions: Destinations {
     override val route = "Instructions"
 }
+object HighScores: Destinations {
+    override val route = "HighScores"
+}
