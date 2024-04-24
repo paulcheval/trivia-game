@@ -40,7 +40,7 @@ import com.example.triviagame.navigation.TriviaInfo
 @Composable
 fun HomeScreen(navController: NavHostController) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Awesome Trivia Experience") }) },
+        topBar = { TriviaTopAppBar(" - Welcome") },
 
         content = { padding ->
             Column(verticalArrangement = Arrangement.Center,
