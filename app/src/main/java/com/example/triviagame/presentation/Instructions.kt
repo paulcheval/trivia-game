@@ -38,7 +38,7 @@ import com.example.triviagame.navigation.TriviaInfo
 @Composable
 fun InstructionScreen(navController: NavHostController) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Awesome Trivia Experience") }) },
+        topBar = { TriviaTopAppBar(message = " - How to Play") },
 
         content = { padding ->
            Column(verticalArrangement = Arrangement.SpaceAround,

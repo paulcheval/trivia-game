@@ -68,7 +68,7 @@ fun TriviaInfo(navController: NavHostController) {
             })
     }
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Awesome Trivia Experience") }) },
+        topBar = { TriviaTopAppBar(message = " - Play") },
 
         content = { padding ->
             Log.d("TriviaInfo-top", "Number of questions - $uiState.questions.size")
